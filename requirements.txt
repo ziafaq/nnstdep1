@@ -1,0 +1,7 @@
+uvicorn
+numpy
+pandas
+joblib
+scikit-learn
+streamlit
+keras
