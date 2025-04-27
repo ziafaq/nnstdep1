@@ -6,7 +6,7 @@ import pandas as pd
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 
 # Title of the app
 st.title("Housing Price Prediction")
