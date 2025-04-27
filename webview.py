@@ -15,9 +15,9 @@ st.title("Housing Price Prediction")
 st.write("""Select the housing features you'd like to predict:""")
 
 # Load the pickled models and keras model
-pscaler = joblib.load('/content/scaler.pkl')
-pencoder = joblib.load('/content/encoder.pkl')
-pmodel = load_model('/content/hp_nn_model.keras')
+pscaler = joblib.load('scaler.pkl')
+pencoder = joblib.load('encoder.pkl')
+pmodel = load_model('hp_nn_model.keras')
 
 # Function to predict
 #@st.cache_resource
@@ -47,7 +47,7 @@ def predict(imodel, _iscaler, _iencoder, ifeatures):
     return prediction
 
 #fp = '/content/drive/MyDrive/Customer Data.csv'
-fp='/content/HousesInfo.txt'
+fp='HousesInfo.txt'
 cols = ["bedrooms", "bathrooms", "area", "zipcode", "price"]
 df = pd.read_csv(fp, sep=" ", header=None, names=cols)
 
