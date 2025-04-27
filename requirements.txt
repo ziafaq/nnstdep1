@@ -1,8 +1,6 @@
 numpy
 pandas
 joblib
-warnings
 scikit-learn
 streamlit
 keras
-tensorflow
