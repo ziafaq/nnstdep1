@@ -1,98 +1,102 @@
-
 import streamlit as st
 import numpy as np
+import pandas as pd
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
-from keras.models import load_model
-import time
-import os
-import librosa
+from tensorflow.keras.models import load_model
 
 # Title of the app
-st.title('Audio Classification system')
+st.title("Housing Price Prediction")
+
+# Instructions
+st.write("""Select the housing features you'd like to predict:""")
 
 # Load the pickled models and keras model
-#pscaler = joblib.load('/content/scaler.pkl')
-#pencoder = joblib.load('/content/encoder.pkl')
-pmodel = load_model('/root/sound_datasets/urbansound8k/saved_models/audio_classification_cnn.keras')
+pscaler = joblib.load('/content/scaler.pkl')
+pencoder = joblib.load('/content/encoder.pkl')
+pmodel = load_model('/content/hp_nn_model.keras')
 
-# load the saved model
-#with open("ANN_Model.pickle", "rb") as f:
-#    ANN_Model = pickle.load(f)
+# Function to predict
+#@st.cache_resource
+def predict(imodel, _iscaler, _iencoder, ifeatures):
+    # encode the features
+    #for ft in ifeatures:
+    #  if ifeatures[ft].
+    print(ifeatures, type(ifeatures))
+    ind_cols =  ["bedrooms", "bathrooms", "area", "zipcode"]
+    cat_col = ['zipcode']
+    num_col = ['bedrooms','bathrooms','area']
+    tmp_df = pd.DataFrame(ifeatures,columns=ind_cols)
+    encoded_features = pd.DataFrame(_iencoder.transform(tmp_df[cat_col]))
 
+    # Scale the features
+    scaled_features = pd.DataFrame(_iscaler.transform(tmp_df[num_col]))
+    print(type(scaled_features),scaled_features)
+    print(type(encoded_features),encoded_features)
+    tmp_fin_data = pd.concat([scaled_features,encoded_features], axis=1)
+    print(tmp_fin_data)
 
-uploaded_file=st.file_uploader("Choose an Audio file",
-                               type=[".wav",".mp3"], 
-                               accept_multiple_files=False) #"wave",".flac",
+    # Predict using the Neural Network model
+    prediction = imodel.predict(tmp_fin_data)
 
-#Saving the browsed audio in our local
-def Save_audio(upload_audio):
-    try:
-        if not os.path.exists("uploads"):
-            os.makedirs("uploads")
-        save_path = os.path.join(os.getcwd(), "uploads", upload_audio.name)
-        with open(save_path, 'wb') as f:
-            f.write(upload_audio.getbuffer())
-        return save_path
-    except Exception as e:
-        print("Error saving file:", e)
-        return None
+    # Return the class with the highest probability
+    #return np.argmax(prediction, axis=1)
+    return prediction
 
-#extract features using librosa(mfcc)
-def extract_feature(file):
-    data, sample_rates=librosa.load(file)
-    mfcc_features=librosa.feature.mfcc(y=data,sr=sample_rates,n_mfcc=40)
-    mfcc_scaled_feature=np.mean(mfcc_features.T,axis=0)
+#fp = '/content/drive/MyDrive/Customer Data.csv'
+fp='/content/HousesInfo.txt'
+cols = ["bedrooms", "bathrooms", "area", "zipcode", "price"]
+df = pd.read_csv(fp, sep=" ", header=None, names=cols)
 
-    mfcc_scaled_feature = mfcc_scaled_feature.reshape(1, -1)
-    print(000,type(mfcc_scaled_feature),mfcc_scaled_feature)
-    return mfcc_scaled_feature 
+# Loop through each column and display a selectbox with the minimum value as the default
+selected_values = {}
+for column in df.drop(columns=['price']).columns:
+    # Get the minimum value of the column
+    min_value = df[column].min()
 
+    if column=='zipcode':
+
+      # Display a selectbox for the column with the minimum value as the default
+      selected_values[column] = st.selectbox(
+          f'Select a value for {column}',
+          df[column].unique().tolist(),
+          index=df[column].tolist().index(min_value)  # Set the default to the minimum value
+      )
+
+    else:
+      # Check if the column's dtype is an integer type
+      if np.issubdtype(df[column].dtype, np.integer):
+          step = 1  # Integer step
+      else:
+          step = 0.5  # Float step
+
+      # Display a number input box for the column with the minimum value as the default
+      selected_values[column] = st.number_input(
+          f'Select a value for {column}',
+        min_value=min_value,  # minimum allowed value
+        value=min_value,      # default value set to the minimum value
+        #step=1 if pd.api.types.is_integer_dtype(df[column]) else 0.01  # Step size depending on data type
+        #step=1 if isinstance(df[column].dtype,'Int64') else 0.01
+        step = step
+      )
 
 # Add a submit button
 if st.button('Submit'):
+    # Load your trained model (replace 'your_model.joblib' with your model's file path)
+    #model = joblib.load('kmeans_model.pkl')
+    #model = load_model('/content/hp_nn_model.keras')
 
-  extract_features=[]
-  if uploaded_file is not None:
-      if Save_audio(uploaded_file):
-          audio_bytes = uploaded_file.read()
-          st.audio(audio_bytes, format="audio/wav")
-          # extract_features.append(extract_feature(os.path.join("uploads",uploaded_file.name)))
-          extract_features = extract_feature(os.path.join("uploads",uploaded_file.name))
-          print(111,extract_features)
-          progress_text = "Hold on! Result will shown below."
-          my_bar = st.progress(0, text=progress_text)
-          for percent_complete in range(100):
-              time.sleep(0.02)
-              my_bar.progress(percent_complete + 1, text=progress_text) ## to add progress bar untill feature got extracted
+    # Prepare the data for prediction (ensure the data matches the model's expected input format)
+    input_data = [list(selected_values.values())]  # Convert selected values to list for prediction
+    #print(input_data)
+    # Use the model to predict
+    #prediction = model.predict(pd.DataFrame(input_data))
+    # Get the prediction
+    prediction = predict(pmodel, pscaler, pencoder, input_data)
 
-
-          # use the loaded model for prediction
-
-          # Reshape the features
-          # mfccs_scaled_features = mfccs_scaled_features.reshape(1, -1)
-
-          # Reshape the features to match the input shape of the CNN model
-          #mfccs_extract_features = extract_features.reshape(1, extract_features.shape[0], 1) 
-          # Reshape to (1, number of features, 1)
-
-          #predictions = pmodel.predict(np.array(extract_features))
-          predictions = pmodel.predict(extract_features)
-          pred_class = np.argmax(predictions)
-
-          # Map the predicted label index to the actual class label
-          class_names = ['Air Conditioner', 'Car Horn', 'Children Playing', 'Dog Bark',
-                        'Drilling', 'Engine Idling', 'Gun Shot', 'Jackhammer', 'Siren',
-                        'Street Music']
-          prediction_class = class_names[pred_class]
-
-          print(prediction_class)
-
-          #with open("Categories.pickle", "rb") as f:
-          #    Categories = pickle.load(f)
-          #class_cat=Categories[Categories['Class_ID']==pred_class]['Category']
-          #shows the classified audio on page
-          #bold_text = f"<t>{np.array(class_cat)[0]}</t>"
-          bold_text = f"<t>{prediction_class}</t>"
-          st.write(f'<span style="font-size:20px;">This Uploaded sound clip is {bold_text}</span>', unsafe_allow_html=True)
+    # Display the prediction result
+    st.subheader("Prediction:")
+    st.write(f"The predicted house price is: {prediction}")  # Assuming the model returns a single prediction
