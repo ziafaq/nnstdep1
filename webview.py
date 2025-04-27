@@ -15,9 +15,9 @@ st.title("Housing Price Prediction")
 st.write("""Select the housing features you'd like to predict:""")
 
 # Load the pickled models and keras model
-#pscaler = joblib.load('scaler.pkl')
-#pencoder = joblib.load('encoder.pkl')
-#pmodel = load_model('hp_nn_model.keras')
+pscaler = joblib.load('scaler.pkl')
+pencoder = joblib.load('encoder.pkl')
+pmodel = load_model('hp_nn_model.keras')
 
 # Function to predict
 #@st.cache_resource
@@ -95,7 +95,7 @@ if st.button('Submit'):
     # Use the model to predict
     #prediction = model.predict(pd.DataFrame(input_data))
     # Get the prediction
-    prediction = "1"# predict(pmodel, pscaler, pencoder, input_data)
+    prediction = predict(pmodel, pscaler, pencoder, input_data)
 
     # Display the prediction result
     st.subheader("Prediction:")
