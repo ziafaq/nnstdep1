@@ -6,7 +6,7 @@ import pandas as pd
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 
 # Title of the app
 st.title("Housing Price Prediction")
@@ -95,7 +95,7 @@ if st.button('Submit'):
     # Use the model to predict
     #prediction = model.predict(pd.DataFrame(input_data))
     # Get the prediction
-    prediction = predict(pmodel, pscaler, pencoder, input_data)
+    prediction = "1"# predict(pmodel, pscaler, pencoder, input_data)
 
     # Display the prediction result
     st.subheader("Prediction:")
